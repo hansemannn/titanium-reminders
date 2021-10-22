@@ -1,39 +1,28 @@
-// This is a test harness for your module
-// You should do something interesting in this harness
-// to test out the module and to provide instructions
-// to users on how to use it by example.
+import TiReminders from 'ti.reminders';
 
+// IMPORTANT: Remember to add the "NSRemindersUsageDescription" to your tiapp.xml <ios> plist section first
 
-// open a single window
-var win = Ti.UI.createWindow({
-	backgroundColor:'white'
-});
-var label = Ti.UI.createLabel();
-win.add(label);
-win.open();
+const window = Ti.UI.createWindow();
+window.addEventListener('open', authorize);
+window.open();
 
-// TODO: write your module tests here
-var titanium_reminders = require('ti.reminders');
-Ti.API.info("module is => " + titanium_reminders);
+async function authorize() {
+    const success = await TiReminders.requestRemindersPermissions();
+    if (!success) {
+        alert('No permissions!');
+    }
 
-label.text = titanium_reminders.example();
+    // Get all reminders
+    let reminders = await TiReminders.fetchReminders();
+    console.warn(reminders);
 
-Ti.API.info("module exampleProp is => " + titanium_reminders.exampleProp);
-titanium_reminders.exampleProp = "This is a test value";
+    // Update first reminder (mark as completed)
+    await TiReminders.updateReminder(reminders[0].identifier);
 
-if (Ti.Platform.name == "android") {
-	var proxy = titanium_reminders.createExample({
-		message: "Creating an example Proxy",
-		backgroundColor: "red",
-		width: 100,
-		height: 100,
-		top: 100,
-		left: 150
-	});
+    // Delete first reminder
+    await TiReminders.removeReminder(reminders[0].identifier);
 
-	proxy.printMessage("Hello world!");
-	proxy.message = "Hi world!.  It's me again.";
-	proxy.printMessage("Hello world!");
-	win.add(proxy);
+    // Re-fetch reminders
+    reminders = await TiReminders.fetchReminders();
+    console.warn(reminders);
 }
-
