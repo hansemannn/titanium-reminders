@@ -1,0 +1,11 @@
+framework module TiReminders {
+  umbrella header "TiReminders.h"
+
+  export *
+  module * { export * }
+}
+
+module TiReminders.Swift {
+    header "TiReminders-Swift.h"
+    requires objc
+}
