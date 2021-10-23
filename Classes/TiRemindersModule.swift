@@ -102,8 +102,10 @@ class TiRemindersModule: TiModule {
   /// Update a reminder (currently only marks it as completed)
   ///
   @objc(updateReminder:)
-  func updateReminder(identifier: [Any]) -> JSValue? {
-    guard let identifier = identifier.first as? String else { return nil }
+  func updateReminder(args: [Any]) -> JSValue? {
+    guard let identifier = args.first as? String, let payload = args[1] as? [String: Any] else {
+      return nil
+    }
 
     let promise = KrollPromise(in: currentContext())
     let predicate = self.eventStore.predicateForReminders(in: nil)
@@ -114,13 +116,35 @@ class TiRemindersModule: TiModule {
         return
       }
 
-      if let reminder = reminders.first(where: { $0.calendarItemIdentifier == identifier }) {
-        reminder.isCompleted = true
-        try! self.eventStore.save(reminder, commit: true)
-        promise?.resolve([["success": true]])
+      guard let reminder = reminders.first(where: { $0.calendarItemIdentifier == identifier }) else {
+        promise?.reject([["success": false, "error": "Cannot find reminder with ID = \(identifier)"]])
+        return
       }
+
+      // "completed" property
+      if let completed = payload["completed"] as? Bool {
+        reminder.isCompleted = completed
+      }
+
+      // "completionDate" property
+      if let completionDate = payload["completionDate"] as? Date {
+        reminder.completionDate = completionDate
+      }
+
+      // "priority" property
+      if let priority = payload["priority"] as? Int {
+        reminder.priority = priority
+      }
+
+      // "title" property
+      if let title = payload["title"] as? String {
+        reminder.title = title
+      }
+
+      try! self.eventStore.save(reminder, commit: true)
+      promise?.resolve([["success": true]])
     }
-    
+
     return promise?.jsValue
   }
 

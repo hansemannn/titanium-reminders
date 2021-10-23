@@ -16,8 +16,11 @@ async function authorize() {
     let reminders = await TiReminders.fetchReminders();
     console.warn(reminders);
 
-    // Update first reminder (mark as completed)
-    await TiReminders.updateReminder(reminders[0].identifier);
+    // Update first reminder (available properties: completed, title, completionDate & priority)
+    await TiReminders.updateReminder(reminders[0].identifier, {
+        completed: true,
+        title: `${reminders[0].title} (new)`
+    });
 
     // Delete first reminder
     await TiReminders.removeReminder(reminders[0].identifier);
